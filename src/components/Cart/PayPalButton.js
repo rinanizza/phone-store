@@ -1,4 +1,66 @@
 import React from 'react';
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+
+export default class MyApp extends React.Component {
+  render() {
+    console.log("PayPal Sandbox Client ID:", process.env.REACT_APP_PAYPAL_CLIENT_ID);
+
+    const onSuccess = (details) => {
+      // Successful payment handling
+      console.log("The payment was succeeded!", details);
+      this.props.clearCart();
+      this.props.history.push("/");
+    };
+
+    const onCancel = (data) => {
+      // User pressed "cancel" or closed PayPal's popup
+      console.log("The payment was cancelled!", data);
+    };
+
+    const onError = (err) => {
+      // Error handling
+      console.log("Error!", err);
+    };
+
+    // Adjust button style
+    const buttonStyle = {
+      layout: 'vertical', // Keep the layout vertical for stacking buttons
+      color: 'gold',      // Keep the PayPal button color as gold
+      shape: 'rect',      // Rectangle shape for consistency
+      label: 'paypal',    // Label to show the PayPal logo
+      height: 40,         // Set height to 40px (adjust this as needed)
+    };
+
+    return (
+      <div style={{ width: '200px', marginLeft: '0'}}> {/* Wrap in a div to control width */}
+        <PayPalScriptProvider options={{ "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID }}>
+          <PayPalButtons
+            style={buttonStyle}  // Apply the custom button style
+            createOrder={(data, actions) => {
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: this.props.total, // Use the total passed via props
+                  },
+                }],
+              });
+            }}
+            onApprove={(data, actions) => {
+              return actions.order.capture().then(details => {
+                onSuccess(details);
+              });
+            }}
+            onError={onError}
+            onCancel={onCancel}
+          />
+        </PayPalScriptProvider>
+      </div>
+    );
+  }
+}
+
+
+/*import React from 'react';
 import PaypalExpressBtn from 'react-paypal-express-checkout';
 
 export default class MyApp extends React.Component {
@@ -56,3 +118,5 @@ export default class MyApp extends React.Component {
     );
   }
 }
+
+*/
